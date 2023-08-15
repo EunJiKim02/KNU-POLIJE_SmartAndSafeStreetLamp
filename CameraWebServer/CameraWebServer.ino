@@ -1,3 +1,5 @@
+
+
 #include "esp_camera.h"
 #include <WiFi.h>
 
@@ -12,8 +14,8 @@
 //#define CAMERA_MODEL_M5STACK_PSRAM
 #define CAMERA_MODEL_AI_THINKER
 
-const char* ssid = "502";
-const char* password = "mobuktodae";
+const char* ssid = "JTI-3.02";
+const char* password = "";
 
 
 #if defined(CAMERA_MODEL_WROVER_KIT)
@@ -125,7 +127,7 @@ void setup() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
   //init with high specs to pre-allocate larger buffers
-  if(psramFound()){
+  if (psramFound()) {
     config.frame_size = FRAMESIZE_UXGA;
     config.jpeg_quality = 10;
     config.fb_count = 2;
