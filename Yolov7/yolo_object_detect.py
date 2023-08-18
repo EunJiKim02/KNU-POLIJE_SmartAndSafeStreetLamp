@@ -11,7 +11,7 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, time_synchronized
 
 
-WEIGHTS = '2items.pt'
+WEIGHTS = 'camdetection.pt'
 IMG_SIZE = 640
 DEVICE = ''
 AUGMENT = False
@@ -22,7 +22,7 @@ AGNOSTIC_NMS = False
 
 
 # Webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("http://10.1.64.114:81/stream")
 
 # Initialize
 device = select_device(DEVICE)
@@ -31,7 +31,7 @@ print('device:', device)
 
 # Load model
 model = attempt_load(WEIGHTS, map_location=device)  # load FP32 model
-stride = int(model.stride.max())  # model stride
+stride = int(model.stride.max())  # model stridesj 
 imgsz = check_img_size(IMG_SIZE, s=stride)  # check img_size
 if half:
     model.half()  # to FP16
