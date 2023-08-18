@@ -24,8 +24,8 @@
 #include "addons/RTDBHelper.h"
 
 // Insert your network credentials
-#define WIFI_SSID "ASTON"
-#define WIFI_PASSWORD "wonderful"
+#define WIFI_SSID "JTI-3.02"
+#define WIFI_PASSWORD ""
 
 // Insert Firebase project API Key
 #define API_KEY "AIzaSyD8yzEFrlmQP-JRoEq8QnK0jTbGb_3LfNw"
@@ -134,7 +134,7 @@ void loop(){
     int timestamp;
     timestamp = getTime();
     Serial.println(timestamp);
-    String databasePath = String(timestamp) + "/";
+    String databasePath = "/data/" + String(timestamp) + "/";
     
     if (Firebase.RTDB.setInt(&fbdo, databasePath + "timestamp", timestamp)){
       Serial.println("PASSED");
