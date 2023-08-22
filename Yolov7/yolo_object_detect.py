@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import requests
 
+
 from numpy import random
 from models.experimental import attempt_load
 from utils.datasets import letterbox
@@ -11,9 +12,20 @@ from utils.general import check_img_size, check_requirements, non_max_suppressio
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, time_synchronized
 
+from datetime import datetime
 
-WEIGHTS = 'camdetection.pt'
-IMG_SIZE = 64
+import firebase_admin
+from firebase_admin import db, credentials
+from firebase_admin import storage
+
+cred = credentials.Certificate("esp32-b8e97-firebase-adminsdk-gtaqd-34a681d2f0.json")
+firebase_admin.initialize_app(cred, {
+    "storageBucket" : "esp32-b8e97.appspot.com",
+    "databaseURL" : "https://esp32-b8e97-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    })
+
+WEIGHTS = 'best (1).pt'
+IMG_SIZE = 32
 DEVICE = ''
 AUGMENT = False
 CONF_THRES = 0.25
@@ -21,10 +33,16 @@ IOU_THRES = 0.45
 CLASSES = None
 AGNOSTIC_NMS = False
 
-IpAddress = 'http://10.10.183.213:81/stream'
+
+ArduinoIp = '10.10.180.100'
+IpAddress = f'http://{ArduinoIp}:81/stream'
+
 
 # Webcam
 cap = cv2.VideoCapture(IpAddress)
+
+bucket = storage.bucket()
+
 
 # Initialize
 device = select_device(DEVICE)
@@ -80,6 +98,18 @@ def detect(frame):
 
     # det : list of data
 
+    '''
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "firebase/app";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    '''
     # s : size of box size
     s = ''
     s += '%gx%g ' % img.shape[2:]  # print string
@@ -97,53 +127,54 @@ def detect(frame):
 
         # Write results
         for *xyxy, conf, cls in reversed(det):
-            # 아두이노의 IP 주소와 포트 번호
-            arduino_ip = "127.0.0.1"
-            arduino_port = "5000"
-
-            print(cls)
+            # cls : index of object (0 : Celurit, 1 : Machete, 2 : Person)
+            print(int(cls))
 
             # 아두이노에 보낼 데이터 (문자열 형식)
-            if (cls == 0):
-                data = "Celurit"
-            elif (cls == 1):
-                data = "Machete"
-            elif (cls == 2):
-                data = "Person"
+            if (int(cls) == 0 or int(cls) == 1):
+                data = "danger"
+                current_time = datetime.now()
+                
+                ret, frame = cap.read()
 
-            # 아두이노에 보낼 데이터 (JSON 형식)
-            # data = {
-            #     "key1": "value1",
-            #     "key2": "value2"
-            # }
+                blob = bucket.blob("Screen.png")
+                blob.upload_from_filename("Screen.png")
+                image_path = f"detect_image/{current_time}.png"
+                cv2.imwrite(image_path, frame)
 
-            # HTTP POST 요청을 보낼 URL
-            url = f"http://{arduino_ip}:{arduino_port}"
+                data = {
+                    current_time:
+                        {
+                            "info" : "ESP32-CAM 1",
+                            "image": image_path, 
+                            "time" : current_time 
+                        }
+                    }
+                ref = db.reference('/data')
+            elif (int(cls) == 2):
+                data = "person"
+
+            # HTTP GET 요청을 보낼 URL
+            url = f"http://{ArduinoIp}/{data}"
+            # url = f"http://{ArduinoIp}"
+            print(url)
 
             try:
                 # HTTP POST 요청 보내기
-                response = requests.post(url, data=data)
+                response = requests.get(url)
 
                 # 응답 확인
                 if response.status_code == 200:
                     # 요청이 성공한 경우
-                    print("HTTP POST 요청 성공")
-                    print("응답 데이터:", response.text)
+                    print("HTTP GET 요청 성공")
+                    # print("응답 데이터:", response.text)
                 else:
-                    print(f"HTTP POST 요청 실패. 응답 코드: {response.status_code}")
+                    print(f"HTTP GET 요청 실패. 응답 코드: {response.status_code}")
             except Exception as e:
-                print(f"HTTP POST 요청 중 오류 발생: {e}")
+                print(f"HTTP GET 요청 중 오류 발생: {e}")
 
 
-            # cls : index of object (0 : Celurit, 1 : Machete, 2 : Person)
-            
-            # if (cls == 0):
-            #     URL = ''
-            # elif (cls == 1):
-            #     URL = ''
-            # elif (cls == 2):
-            #     URL = ''
-
+            # 이 부분 DB 안 터지게 하려면 추가해야 할 듯
             # only send requests when detected object is changed
             # if (oldURL != URL):
             #     try:
@@ -176,4 +207,39 @@ with torch.no_grad():
 
         if cv2.waitKey(1) == ord('q'):
             break
-            
+    
+
+# Load all models
+model1 = attempt_load('best (1).pt', map_location=device)
+model2 = attempt_load('best(2).pt', map_location=device)
+model3 = attempt_load('best1.pt', map_location=device)
+model4 = attempt_load('best2.pt', map_location=device)
+
+# Inference and Ensemble
+with torch.no_grad():
+    while True:
+        ret, frame = cap.read()
+
+        # Detect using all models
+        result1 = detect(frame, model1)
+        result2 = detect(frame, model2)
+        result3 = detect(frame, model3)
+        result4 = detect(frame, model4)
+
+        # Combine results from all models
+        final_result = combine_results(result1, result2, result3, result4)
+
+        cv2.imshow('Ensemble Result', final_result)
+
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+# Combine Results Logic
+def combine_results(result1, result2, result3, result4):
+    # Implement your logic here to combine results from all models
+    # For example, you can average bounding box coordinates, or choose the more confident prediction, etc.
+    # This logic should depend on your specific use case and desired behavior.
+
+    # For demonstration purposes, let's just use the result from model1
+    return result1
+
