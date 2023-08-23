@@ -42,12 +42,18 @@ Stored information displays content on the web created using the Laravel Framewo
 ## Functional Description
 
 ### Automatic brightness adjustment
+![image](https://github.com/EunJiKim02/KNU-POLIJE_SmartAndSafeStreetLamp/assets/87495422/7af8025d-a245-4cfe-acf3-9bc33c982949)
+
 The light sensor in the streetlight recognizes
 the ambient brightness and brightens the street accordingly as the ambient
 brightness decreases from the reference brightness.
 
+<br>
 
 ### Object detection
+![image](https://github.com/EunJiKim02/KNU-POLIJE_SmartAndSafeStreetLamp/assets/87495422/049c05a9-3fba-410e-8ab6-87ee9ef359be)
+
+
 The camera module in the streetlight recognizes objects near
 the streetlight. If a person passes near the lamppost, it recognizes the person and
 increases the brightness from a level adapted to the ambient brightness to the
@@ -55,8 +61,11 @@ maximum brightness to ensure pedestrian safety. Once the person is out of the
 camera module's field of view, it returns to ambient brightness after a few seconds
 to maximize energy efficiency. If a weapon is recognized by the camera ( Machete, Celurit ), a report function is triggered in case of an accident.
 
+<br>
 
 ### Reporting function
+![image](https://github.com/EunJiKim02/KNU-POLIJE_SmartAndSafeStreetLamp/assets/87495422/40055316-714c-4482-a73e-5649f717e3a5)
+
 Considering Indonesia's lack of security, AI automatically detects dangerous situations and sends information to the police. It sends information containing the names, photos, and times of photos and streetlights, and updates to the website in real time. Photos are kept on the website for three days, and can then be found on Firebase Storage.
 
 <br>
