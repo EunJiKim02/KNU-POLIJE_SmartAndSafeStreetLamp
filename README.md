@@ -8,6 +8,8 @@ person is recognized using the YOLOv7 model, the brightness of the street light
 is adjusted with the illuminance sensor, and when a dangerous object other than
 a person is recognized, the final goal is to perform a reporting function.
 
+
+
 <br>
 
 ## Overall Structure 
@@ -25,6 +27,9 @@ a person is recognized, the final goal is to perform a reporting function.
 - NeoPixel (SW2812)
 - Photoresistor
 - some wires and resistors
+
+![image](https://github.com/EunJiKim02/KNU-POLIJE_SmartAndSafeStreetLamp/assets/87495422/9bfc8557-ce6a-4f6b-b293-58d2580d919f)
+
 
 
 ### AI Model Training
