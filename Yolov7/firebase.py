@@ -27,4 +27,4 @@ bucket = storage.bucket()
 blob = bucket.blob("Screen.png")
 blob.upload_from_filename("Screen.png")
 
-
+url = blob.generate_signed_url()
